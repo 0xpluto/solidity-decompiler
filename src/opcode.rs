@@ -17,13 +17,6 @@ pub struct Processor {
 
 impl Processor {
     pub fn new(bytecode: &Vec<u8>) -> Processor {
-        // convert the bytecode vector to a linked list
-
-
-        // reverse the vector to pop bytecodes off the end
-        let mut rev_bytecode = bytecode.to_vec();
-        rev_bytecode.reverse();
-        
         let mut opcodes = vec![];
 
         let mut i: usize = 0;
@@ -33,7 +26,7 @@ impl Processor {
                 let n = (bytecode[i] - 0x5f) as usize;
 
                 let mut push_bytes = vec![];
-                for j in (i)..(i+n) {
+                for j in i..(i+n) {
                     push_bytes.push(bytecode[j+1])
                 }
                 i += n;
