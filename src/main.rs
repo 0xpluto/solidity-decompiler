@@ -9,4 +9,10 @@ fn main() {
     let contract = Processor::new(&bytecode);
     contract.print();
     contract.write("dst/gen.txt");
+    let sigs = &contract.func_sigs();
+    // print each element in the vector as hexadecimal
+    println!("Contracts possible function signatures: ");
+    for sig in sigs {
+        println!("0x{:x?}", sig);
+    }
 }

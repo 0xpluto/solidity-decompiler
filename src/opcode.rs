@@ -38,7 +38,26 @@ impl Processor {
         }
         Processor { opcodes: opcodes, bytecode: bytecode.to_vec() }
     }
+    pub fn func_sigs(&self) -> Vec<u32> {
+        let mut sigs = vec![];
+        for opcode in &self.opcodes {
+            // check if the opcode is a PUSH4
+            if opcode.opcode == 0x63 {
+                // change the push_bytes to a u16
+                let mut sig: u32 = 0;
+                for i in 0..4 {
+                    sig += (opcode.push_bytes.as_ref().unwrap()[3-i] as u32) << (8 * i);
+                }
+                // do not push the value if it is the max for u32
+                if sig != 0xffffffff {
+                    sigs.push(sig);
+                }
+            }
+        }
+        sigs
+    }
 
+    // Viewing functions
     pub fn print(&self) {
         // loop over the vector of opcodes
         for opcode in &self.opcodes {
