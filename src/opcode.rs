@@ -12,13 +12,16 @@ pub struct Opcode {
 
 pub struct Processor {
     pub opcodes: Vec<Opcode>,
+    pub program_counter: Vec<u16>,
     pub bytecode: Vec<u8>,
 }
 
 impl Processor {
     pub fn new(bytecode: &Vec<u8>) -> Processor {
         let mut opcodes = vec![];
+        let mut program_cntr: Vec<u16> = vec![];
 
+        let mut pc: u16 = 0;
         let mut i: usize = 0;
         while i < bytecode.len() {
             let opcode = Opcode::from_opcode(bytecode[i]);
@@ -30,13 +33,23 @@ impl Processor {
                     push_bytes.push(bytecode[j+1])
                 }
                 i += n;
+
                 opcodes.push(opcode.push_bytes(push_bytes));
+                program_cntr.push(pc);
+                pc += 1 + n as u16;
+
             } else {
                 opcodes.push(opcode);
+                program_cntr.push(pc);
+                pc += 1;
             }
             i += 1;
         }
-        Processor { opcodes: opcodes, bytecode: bytecode.to_vec() }
+        Processor { 
+            opcodes: opcodes, 
+            program_counter: program_cntr,
+            bytecode: bytecode.to_vec() 
+        }
     }
     pub fn func_sigs(&self) -> Vec<u32> {
         let mut sigs = vec![];
@@ -60,23 +73,28 @@ impl Processor {
     // Viewing functions
     pub fn print(&self) {
         // loop over the vector of opcodes
-        for opcode in &self.opcodes {
+        for (i, opcode) in self.opcodes.iter().enumerate() {
             match &opcode.push_bytes {
-                Some(x) => println!("{} 0x{}", opcode.name, hex::encode(x)),
-                None => println!("{}", opcode.name),
+                Some(x) => {
+                    println!("PC[{:x?}]: {} 0x{}", self.program_counter[i], opcode.name, hex::encode(x));
+                },
+                None => {
+                    println!("PC[{:x?}]: {}", self.program_counter[i], opcode.name);
+                },
             }
         }
+        println!();
     }
     pub fn write(&self, filename: &str) {
         let mut file = std::fs::File::create(filename).unwrap();
         let mut contents = String::new();
-        for opcode in &self.opcodes {
+        for (i, opcode) in self.opcodes.iter().enumerate() {
             match &opcode.push_bytes {
                 Some(x) => {
-                    contents.push_str(&format!("{} 0x{}\n", opcode.name, hex::encode(x)));
+                    contents.push_str(&format!("PC[{:x?}]: {} 0x{}\n", self.program_counter[i], opcode.name, hex::encode(x)));
                 },
                 None => {
-                    contents.push_str(&format!("{}\n", opcode.name));
+                    contents.push_str(&format!("PC[{:x?}]: {}\n", self.program_counter[i], opcode.name));
                 },
             }
         }
